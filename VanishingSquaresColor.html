@@ -1,0 +1,179 @@
+<html>
+    <head>
+        <title>Vanishing Squares</title>
+    </head>
+    <body>
+        <canvas id="myCanvas"></canvas>
+        <script type="text/javascript">
+
+            var canvas = document.getElementById('myCanvas');
+
+            var context = canvas.getContext('2d');
+
+            var frameRate = 25;
+
+            //var numberOfSquares = 10;
+
+            var vanishFrames = 200;
+
+            var currentFrame = 0;
+
+            var minimumSquareWidthHeight = 100;
+
+            var maximumSquareWidthHeight = 275;
+
+            var minimumSquaresOnScreen = 20;
+
+            var maximumSquaresOnScreen = 60;
+
+            var maxRadsInCircle = 360 * Math.PI / 180
+
+            var squareLineWidth = 1;
+
+            var squares = new Array(); //array of square
+
+            var vanishingPoint;
+
+            var fillSquares = true;
+            var fillSquareRandomColor = true;
+            var fillStyle = '#8ED6FF';
+
+            function getRandomArbitrary(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+            
+            function getRandomColor() {
+                var r = Math.floor(getRandomArbitrary(0, 255));
+                var g = Math.floor(getRandomArbitrary(0, 255));
+                var b = Math.floor(getRandomArbitrary(0, 255));
+                hexString = "#" + r.toString(16) + g.toString(16) + b.toString(16);
+                //alert(hexString);
+                return hexString;
+            }
+
+            function initializeSquares() {
+                for (loopSquares = 0; loopSquares < numberOfSquares; loopSquares++) {
+                    squares[loopSquares] = initializeSquare();
+                }
+            }
+
+            function initializeSquare() {
+                var square = {
+                    angle: getRandomArbitrary(0, maxRadsInCircle),
+                    initialWidth: getRandomArbitrary(minimumSquareWidthHeight, maximumSquareWidthHeight),
+                    initialHeight: getRandomArbitrary(minimumSquareWidthHeight, maximumSquareWidthHeight),
+                    currentWidth: -1,
+                    currentHeight: -1,
+                    initialDistanceFromCenter: canvas.width / 2,
+                    currentDistanceFromCenter: canvas.width / 2,
+                    fillColor: (fillSquareRandomColor)?getRandomColor():fillStyle
+                };
+                square.currentWidth = square.initialWidth;
+                square.currentHeight = square.initialHeight;
+                return square;
+            }
+
+            function vanishSquares() {
+
+                squares = compactSquareArray(squares);
+
+                var numberOfSquares = getRandomArbitrary(minimumSquaresOnScreen, maximumSquaresOnScreen);
+
+                for (loopSquares = 0; loopSquares < numberOfSquares; loopSquares++) {
+                    if (loopSquares > squares.length - 1) {
+                        squares[loopSquares] = initializeSquare();
+                    }
+                    vanishSquare(squares[loopSquares]);
+                }
+                
+            }
+
+            function compactSquareArray(squares) {
+                var newSquares = new Array();
+                var newSquarePosition = -1;
+                for (loopSquares = 0; loopSquares < squares.length; loopSquares++) {
+                    if (squares[loopSquares].currentDistanceFromCenter > 0) {
+                        newSquarePosition++;
+                        newSquares[newSquarePosition] = squares[loopSquares];
+                    }
+                }
+                return newSquares;
+            }
+
+            function vanishSquare(square) {
+                var vanishDistance = square.initialDistanceFromCenter / vanishFrames;
+                square.currentDistanceFromCenter -= vanishDistance;
+
+                var vanishWidth = square.initialWidth / vanishFrames;
+                square.currentWidth -= vanishWidth;
+
+                var vanishHeight = square.initialHeight / vanishFrames;
+                square.currentHeight -= vanishHeight;
+            }
+
+            function drawSquares() {
+                //clear canvas
+                canvas.width = canvas.width;
+                //draw squares
+                for (loopSquares = 0; loopSquares < squares.length; loopSquares++) {
+                    drawSquare(squares[loopSquares]);
+                }
+            }
+
+            function drawSquare(square) {
+
+                var rise = Math.sin(square.angle) * square.currentDistanceFromCenter;
+                var run = Math.cos(square.angle) * square.currentDistanceFromCenter;
+
+                var centerX = vanishingPoint.x + run;
+                var centerY = vanishingPoint.y + rise;
+
+                var originX = centerX - square.currentWidth / 2;
+                var originy = centerY - square.currentHeight / 2;
+
+                drawRectangle(originX, originy, square.currentWidth, square.currentHeight, square.fillColor);
+            }
+
+            function drawRectangle(pX, pY, pWidth, pHeight, fillColor) {
+                context.beginPath();
+                context.rect(pX, pY, pWidth, pHeight);
+                if (fillSquares) {
+                    context.fillStyle = fillColor;
+                    context.fill();
+                }
+                context.lineWidth = squareLineWidth;
+                context.strokeStyle = 'black';
+                context.stroke();
+            }
+
+            function timerElapsed() {
+                vanishSquares();
+                drawSquares();
+            }
+
+            function initializeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.width -= 20; //canvas.scrollLeft;
+                canvas.height = window.innerHeight;
+                canvas.height -= 20; //canvas.scrollTop;
+
+
+                vanishingPoint = {
+                    x: canvas.width / 2,
+                    y: canvas.height / 2
+                };
+
+            }
+
+            initializeCanvas();
+
+
+            //initializeSquares();
+
+            //drawSquares();
+
+            setInterval(timerElapsed, frameRate);
+
+        </script>
+    </body>
+</html>
